@@ -1,22 +1,13 @@
-import { StyleSheet, Text, View, Image, ImageBackground, StatusBar, Animated } from 'react-native';
+import { StyleSheet, Text, View, Image, ImageBackground, StatusBar, } from 'react-native';
 import React, { useEffect } from 'react';
 import { ActivityIndicator } from 'react-native-paper';
 
 const LoadingScreen = () => {
-    const logoScale = new Animated.Value(0);
-
-    useEffect(() => {
-        Animated.spring(logoScale, {
-            toValue: 1,
-            useNativeDriver: true,
-        }).start();
-    }, []);
-
-    return (
+return (
         <View style={styles.view}>
             <StatusBar hidden />
             <ImageBackground source={require('../assets/images/bg.jpg')} style={styles.bg} />
-            <Animated.Image source={require('../assets/images/logo.png')} style={[styles.logo, { transform: [{ scale: logoScale }] }]} />
+            <Image source={require('../assets/images/logo.png')} style={styles.logo} />
             <Text style={styles.MainText}>Bubble Link</Text>
             <Text style={styles.MainSubText}>Powered by React Native</Text>
             <ActivityIndicator animating={true} color="#4A90E7" size="small" style={styles.Loader} />
