@@ -19,12 +19,13 @@ export default function StackNavigation() {
     }, []);
 
     return (
-        <Stack.Navigator screenOptions={{ headerShown: true }}>
+        <Stack.Navigator>
             {isLoading ? (
                 <Stack.Screen name="LoadingScreen" component={LoadingScreen} />
             ) : (
                 <Stack.Screen name="Login" component={Login} />
             )}
+
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
             <Stack.Screen name="Chat" component={Chat} />
