@@ -1,20 +1,21 @@
 import { createStackNavigator } from "@react-navigation/stack";
-import HomeScreen from "../Screens/HomeScreen.jsx";
 import LoadingScreen from "../Screens/LoadingScreen.jsx";
 import Chat from "../Screens/Chat.jsx";
 import Login from "../Screens/Login.jsx";
 import React, { useState, useEffect, createContext } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebaseConfig";  // Firebase Auth setup
-import AsyncStorage from '@react-native-async-storage/async-storage';  // Import AsyncStorage
+import { auth } from "../firebaseConfig";
 
 const Stack = createStackNavigator();
 
-const AuthenticatedUserContext = createContext(null);
+const AuthenticatedUserContext = createContext({
+  user: null,
+  setUser: () => null,
+});
 
-// AuthenticatedUserProvider to provide authentication state throughout the app
-const AuthenticatedUserProvider = ({ children }) => {
+export const AuthenticatedUserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+
   return (
     <AuthenticatedUserContext.Provider value={{ user, setUser }}>
       {children}
@@ -27,43 +28,58 @@ export default function StackNavigation() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Load user data from AsyncStorage
-    const loadUserFromStorage = async () => {
-      const storedUser = await AsyncStorage.getItem('user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));  // If user is in AsyncStorage, set it to state
-      }
-    };
-
-    loadUserFromStorage();  // Run on load
-
-    // Listen for authentication state changes
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setUser(user);  // Set the user to logged-in user
-        AsyncStorage.setItem('user', JSON.stringify(user));  // Save user to AsyncStorage
+        setUser(user);
       } else {
-        setUser(null);  // If no user is logged in, clear AsyncStorage
-        AsyncStorage.removeItem('user');
+        setUser(null);
       }
-      setIsLoading(false);  // Hide the loading screen after authentication check
+      setIsLoading(false);
     });
 
-    // Clean up the listener on component unmount
     return () => unsubscribe();
   }, []);
 
-  // If the app is still checking for authentication status, show the loading screen
   if (isLoading) {
     return <LoadingScreen />;
   }
 
-  // Based on the user state, navigate either to the Home screen or Login screen
   return (
-    <Stack.Navigator initialRouteName={user ? "Home" : "Login"} screenOptions={{ headerShown: true }}>
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen name="Chat" component={Chat} />
-      <Stack.Screen name="Login" component={Login} />
+    <Stack.Navigator
+      initialRouteName={user ? "Chat" : "Login"}
+      screenOptions={{
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: "#fff",
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 1,
+          borderBottomColor: "#e5e5ea",
+        },
+        headerTitleStyle: {
+          color: "#1c1c1e",
+          fontSize: 18,
+          fontWeight: "600",
+        },
+      }}
+    >
+      <Stack.Screen
+        name="Chat"
+        component={Chat}
+        options={{
+          headerBackTitle: true,
+          headerTitleAlign: "left",
+        }}
+      />
+      <Stack.Screen
+        name="Login"
+        component={Login}
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack.Navigator>
   );
 }
+
+export { AuthenticatedUserContext };

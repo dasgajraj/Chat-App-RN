@@ -32,7 +32,7 @@ export default function Login() {
     if (email && password) {
       signInWithEmailAndPassword(auth, email, password)
         .then(() => {
-          navigation.navigate("Home");
+          navigation.navigate("Chat");
         })
         .catch((error) => {
           Alert.alert("Login Failed", "Please check your email and password", [
@@ -56,13 +56,13 @@ export default function Login() {
     if (email && password) {
       createUserWithEmailAndPassword(auth, email, password)
         .then(() => {
-          navigation.navigate("Home");
+          navigation.navigate("Chat");
         })
         .catch((error) => {
           Alert.alert(
             "Sign Up Failed",
             "Please try again with a different email",
-            [{ text: "Log In Instead", onPress: SwitchMode }, { text: "OK" }],
+            [{ text: "Log In Instead", onPress: SwitchMode }, { text: "OK" }]
           );
         });
     } else {
@@ -73,7 +73,7 @@ export default function Login() {
   const handleForgotPassword = () => {
     Alert.alert(
       "Forgot Password",
-      "Please contact support to reset your password",
+      "Please contact support to reset your password"
     );
   };
 
