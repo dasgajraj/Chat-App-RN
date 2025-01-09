@@ -1,26 +1,31 @@
-import React, { useState, useLayoutEffect, useCallback, useRef } from 'react';
-import { 
-  View, Text, TouchableOpacity, TextInput, 
-  FlatList, KeyboardAvoidingView, Platform,
-  StyleSheet, Image, Dimensions 
-} from 'react-native';
-import { ref, onValue, off, push, set } from 'firebase/database';
-import { signOut } from 'firebase/auth';
-import { auth, realtimeDb } from '../firebaseConfig';
-import { useNavigation } from '@react-navigation/native';
-import { AntDesign, Ionicons } from '@expo/vector-icons';
+import React, { useState, useLayoutEffect, useCallback, useRef } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  FlatList,
+  StyleSheet,
+  Image,
+  Dimensions,
+} from "react-native";
+import { ref, onValue, off, push, set } from "firebase/database";
+import { signOut } from "firebase/auth";
+import { auth, realtimeDb } from "../firebaseConfig";
+import { useNavigation } from "@react-navigation/native";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 export default function Chat() {
   const [messages, setMessages] = useState([]);
-  const [inputText, setInputText] = useState('');
+  const [inputText, setInputText] = useState("");
   const navigation = useNavigation();
   const flatListRef = useRef(null);
 
   const onSignOut = () => {
-    signOut(auth).catch(error => console.log('Error logging out: ', error));
-    navigation.navigate('Login');
+    signOut(auth).catch((error) => console.log("Error logging out: ", error));
+    navigation.navigate("Login");
   };
 
   useLayoutEffect(() => {
@@ -31,18 +36,18 @@ export default function Chat() {
         </TouchableOpacity>
       ),
       headerStyle: {
-        backgroundColor: '#F8FAFC',
+        backgroundColor: "#F8FAFC",
       },
-      headerTintColor: '#6366F1',
+      headerTintColor: "#6366F1",
       headerTitleStyle: {
-        fontWeight: '600',
+        fontWeight: "600",
       },
     });
   }, [navigation]);
 
   useLayoutEffect(() => {
-    const messagesRef = ref(realtimeDb, 'messages');
-    
+    const messagesRef = ref(realtimeDb, "messages");
+
     onValue(messagesRef, (snapshot) => {
       const messageList = [];
       snapshot.forEach((child) => {
@@ -57,7 +62,7 @@ export default function Chat() {
   const sendMessage = useCallback(() => {
     if (!inputText.trim()) return;
 
-    const messagesRef = ref(realtimeDb, 'messages');
+    const messagesRef = ref(realtimeDb, "messages");
     const newMessageRef = push(messagesRef);
 
     const message = {
@@ -65,69 +70,77 @@ export default function Chat() {
       text: inputText.trim(),
       user: {
         _id: auth?.currentUser?.email,
-        avatar: auth?.currentUser?.photoURL || 'https://i.pravatar.cc/300'
-      }
+      },
     };
 
     set(newMessageRef, message);
-    setInputText('');
+    setInputText("");
   }, [inputText]);
 
   const renderMessage = ({ item }) => {
     const isCurrentUser = item.user._id === auth?.currentUser?.email;
-    const formattedTime = new Date(item.createdAt).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    const formattedTime = new Date(item.createdAt).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
     });
 
     return (
-      <View style={[
-        styles.messageRowContainer,
-        isCurrentUser ? styles.currentUserRow : styles.otherUserRow
-      ]}>
+      <View
+        style={[
+          styles.messageRowContainer,
+          isCurrentUser ? styles.currentUserRow : styles.otherUserRow,
+        ]}
+      >
         {!isCurrentUser && (
-          <Image 
-            source={{ uri: item.user.avatar }} 
-            style={styles.avatar}
-          />
+          <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
         )}
-        <View style={[
-          styles.messageContainer,
-          isCurrentUser ? styles.currentUserMessage : styles.otherUserMessage
-        ]}>
-          <Text style={[
-            styles.messageText,
-            isCurrentUser ? styles.currentUserText : styles.otherUserText
-          ]}>{item.text}</Text>
-          <Text style={[
-            styles.timeText,
-            isCurrentUser ? styles.currentUserTime : styles.otherUserTime
-          ]}>{formattedTime}</Text>
+        <View>
+          {!isCurrentUser ? (
+            <Text style={styles.userIdText_current}>{item.user._id}</Text>
+          ) : (
+            <Text style={styles.userIdText_other}>You</Text>
+          )}
+          <View
+            style={[
+              styles.messageContainer,
+              isCurrentUser
+                ? styles.currentUserMessage
+                : styles.otherUserMessage,
+            ]}
+          >
+            <Text
+              style={[
+                styles.messageText,
+                isCurrentUser ? styles.currentUserText : styles.otherUserText,
+              ]}
+            >
+              {item.text}
+            </Text>
+            <Text
+              style={[
+                styles.timeText,
+                isCurrentUser ? styles.currentUserTime : styles.otherUserTime,
+              ]}
+            >
+              {formattedTime}
+            </Text>
+          </View>
         </View>
-        {isCurrentUser && (
-          <Image 
-            source={{ uri: auth?.currentUser?.photoURL || 'https://i.pravatar.cc/300' }} 
-            style={styles.avatar}
-          />
-        )}
       </View>
     );
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <FlatList
         ref={flatListRef}
         data={messages}
         renderItem={renderMessage}
-        keyExtractor={item => item._id}
+        keyExtractor={(item) => item._id}
         inverted
         contentContainerStyle={styles.messagesList}
       />
-      
+
       <View style={styles.inputContainer}>
         <TouchableOpacity style={styles.attachButton}>
           <Ionicons name="add-circle-outline" size={24} color="#6366F1" />
@@ -140,40 +153,40 @@ export default function Chat() {
           multiline
           maxHeight={100}
         />
-        <TouchableOpacity 
-          onPress={sendMessage} 
+        <TouchableOpacity
+          onPress={sendMessage}
           style={styles.sendButton}
           disabled={!inputText.trim()}
         >
-          <Ionicons 
-            name="send" 
-            size={24} 
-            color={inputText.trim() ? "#6366F1" : "#CBD5E1"} 
+          <Ionicons
+            name="send"
+            size={24}
+            color={inputText.trim() ? "#6366F1" : "#CBD5E1"}
           />
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC'
+    backgroundColor: "#F8FAFC",
   },
   messagesList: {
-    padding: 15
+    padding: 15,
   },
   messageRowContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
+    flexDirection: "row",
+    alignItems: "flex-end",
     marginVertical: 4,
   },
   currentUserRow: {
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   otherUserRow: {
-    justifyContent: 'flex-start',
+    justifyContent: "flex-start",
   },
   messageContainer: {
     maxWidth: width * 0.7,
@@ -182,52 +195,52 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
   currentUserMessage: {
-    backgroundColor: '#6366F1',
+    backgroundColor: "#6366F1",
     borderTopRightRadius: 4,
   },
   otherUserMessage: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 4,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: "#E2E8F0",
   },
   messageText: {
     fontSize: 16,
     lineHeight: 22,
   },
   currentUserText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
   otherUserText: {
-    color: '#1E293B',
+    color: "#1E293B",
   },
   timeText: {
     fontSize: 12,
     marginTop: 4,
   },
   currentUserTime: {
-    color: '#E2E8F0',
+    color: "#E2E8F0",
   },
   otherUserTime: {
-    color: '#94A3B8',
+    color: "#94A3B8",
   },
   avatar: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: "#E2E8F0",
   },
   inputContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    alignItems: 'flex-end',
+    borderTopColor: "#E2E8F0",
+    alignItems: "flex-end",
   },
   input: {
     flex: 1,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: "#F1F5F9",
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -243,5 +256,19 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     marginRight: 12,
-  }
+  },
+  userIdText_current: {
+    fontSize: 12,
+    color: "#64748B",
+    marginBottom: 4,
+    marginRight: 40,
+    textAlign: "right",
+  },
+  userIdText_other: {
+    fontSize: 12,
+    color: "#64748B",
+    marginBottom: 4,
+    marginLeft: 40,
+    textAlign: "left",
+  },
 });

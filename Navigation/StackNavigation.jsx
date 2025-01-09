@@ -2,26 +2,11 @@ import { createStackNavigator } from "@react-navigation/stack";
 import LoadingScreen from "../Screens/LoadingScreen.jsx";
 import Chat from "../Screens/Chat.jsx";
 import Login from "../Screens/Login.jsx";
-import React, { useState, useEffect, createContext } from "react";
+import React, { useState, useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../firebaseConfig";
 
 const Stack = createStackNavigator();
-
-const AuthenticatedUserContext = createContext({
-  user: null,
-  setUser: () => null,
-});
-
-export const AuthenticatedUserProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-
-  return (
-    <AuthenticatedUserContext.Provider value={{ user, setUser }}>
-      {children}
-    </AuthenticatedUserContext.Provider>
-  );
-};
 
 export default function StackNavigation() {
   const [isLoading, setIsLoading] = useState(true);
@@ -81,5 +66,3 @@ export default function StackNavigation() {
     </Stack.Navigator>
   );
 }
-
-export { AuthenticatedUserContext };

@@ -3,22 +3,17 @@ import {
   Text,
   View,
   Image,
-  ImageBackground,
   StatusBar,
 } from "react-native";
-import React, { useEffect } from "react";
+import React from "react";
 import { ActivityIndicator } from "react-native-paper";
 
 const LoadingScreen = () => {
   return (
     <View style={styles.view}>
       <StatusBar hidden />
-      <ImageBackground
-        source={require("../assets/images/bg.jpg")}
-        style={styles.bg}
-      />
       <Image
-        source={require("../assets/images/logo.png")}
+        source={require("../assets/images/logo.webp")}
         style={styles.logo}
       />
       <Text style={styles.MainText}>Bubble Link</Text>
@@ -44,13 +39,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f8f9fa",
-  },
-  bg: {
-    position: "absolute",
-    width: "100%",
-    height: "100%",
-    opacity: 0.6,
+    backgroundColor: "#F8FAFC",
+    
   },
   logo: {
     width: 150,
@@ -58,6 +48,7 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     marginBottom: 20,
     elevation: 10,
+    
   },
   MainText: {
     fontSize: 28,

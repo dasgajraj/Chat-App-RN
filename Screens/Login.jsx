@@ -4,9 +4,7 @@ import {
   View,
   TextInput,
   TouchableOpacity,
-  Image,
   Alert,
-  SafeAreaView,
 } from "react-native";
 
 import React, { useState } from "react";
@@ -19,7 +17,6 @@ import { auth } from "../firebaseConfig";
 
 import { useNavigation } from "@react-navigation/native";
 
-const backgroundImage = require("../assets/images/bg.jpg");
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -82,8 +79,7 @@ export default function Login() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Image source={backgroundImage} style={styles.backgroundImage} />
+    <View style={styles.container}>
 
       <View style={styles.contentContainer}>
         <View style={styles.formBox}>
@@ -131,15 +127,10 @@ export default function Login() {
             </TouchableOpacity>
           </View>
 
-          {/* <TouchableOpacity
-            onPress={handleForgotPassword}
-            style={styles.forgotPassword}
-          >
-            <Text>Forgot Password?</Text>
-          </TouchableOpacity>*/}
+
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -148,16 +139,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  backgroundImage: {
-    ...StyleSheet.absoluteFillObject, // Ensures the image fills the screen
-    height: "100%",
-    width: "100%",
-    zIndex: -1, // Places the image behind the content
-  },
-
   contentContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Slightly darker overlay for better text visibility
+    backgroundColor: "rgba(0, 0, 0, 0.4)", 
     padding: 20,
     justifyContent: "center",
   },
@@ -210,10 +194,5 @@ const styles = StyleSheet.create({
   switchModeText: {
     color: "#007AFF",
     fontWeight: "bold",
-  },
-
-  forgotPassword: {
-    alignItems: "center",
-    marginTop: 15,
   },
 });
