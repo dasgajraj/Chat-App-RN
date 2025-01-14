@@ -1,4 +1,4 @@
-import React, { useState, useLayoutEffect, useCallback, useRef } from "react";
+import React, { useState, useLayoutEffect, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 import { ref, onValue, off, push, set } from "firebase/database";
 import { signOut } from "firebase/auth";
 import { auth, realtimeDb } from "../firebaseConfig";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 
 const { width } = Dimensions.get("window");
@@ -20,14 +20,23 @@ const { width } = Dimensions.get("window");
 export default function Chat() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
-  const navigation = useNavigation();
   const flatListRef = useRef(null);
+  const navigation = useNavigation();
+  const route = useRoute();
+  const { recipientId, recipientEmail } = route.params;
 
+  // Chat ID is based on the two users' UIDs sorted alphabetically
+  const currentUserUid = auth.currentUser.uid;
+  const chatId =
+    currentUserUid < recipientId ? `${currentUserUid}_${recipientId}` : `${recipientId}_${currentUserUid}`;
+
+  // Handle user sign-out
   const onSignOut = () => {
     signOut(auth).catch((error) => console.log("Error logging out: ", error));
     navigation.navigate("Login");
   };
 
+  // Set up navigation options for the header
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -42,43 +51,49 @@ export default function Chat() {
       headerTitleStyle: {
         fontWeight: "600",
       },
+      title: recipientEmail,
     });
-  }, [navigation]);
+  }, [navigation, recipientEmail]);
 
-  useLayoutEffect(() => {
-    const messagesRef = ref(realtimeDb, "messages");
-
+  // Fetch messages when the component mounts
+  useEffect(() => {
+    const messagesRef = ref(realtimeDb, `messages/${chatId}`);
     onValue(messagesRef, (snapshot) => {
       const messageList = [];
       snapshot.forEach((child) => {
         messageList.push({ ...child.val(), _id: child.key });
       });
-      setMessages(messageList.sort((a, b) => b.createdAt - a.createdAt));
+
+      // Sort messages by creation date in ascending order (oldest first, latest at the bottom)
+      setMessages(messageList.sort((a, b) => a.createdAt - b.createdAt));
     });
 
-    return () => off(messagesRef);
-  }, []);
+    return () => off(messagesRef); // Cleanup listener on unmount
+  }, [chatId]);
 
+  // Send message to the chat
   const sendMessage = useCallback(() => {
     if (!inputText.trim()) return;
 
-    const messagesRef = ref(realtimeDb, "messages");
+    const messagesRef = ref(realtimeDb, `messages/${chatId}`);
     const newMessageRef = push(messagesRef);
 
     const message = {
       createdAt: Date.now(),
       text: inputText.trim(),
       user: {
-        _id: auth?.currentUser?.email,
+        _id: auth.currentUser.uid,
+        email: auth.currentUser.email,
       },
     };
 
     set(newMessageRef, message);
-    setInputText("");
-  }, [inputText]);
+    setInputText(""); // Clear the input field
+  }, [inputText, chatId]);
 
+  // Render each message in the chat
   const renderMessage = ({ item }) => {
-    const isCurrentUser = item.user._id === auth?.currentUser?.email;
+    const isCurrentUser = item.user._id === auth.currentUser.uid;
     const formattedTime = new Date(item.createdAt).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
@@ -86,41 +101,30 @@ export default function Chat() {
 
     return (
       <View
-        style={[
-          styles.messageRowContainer,
-          isCurrentUser ? styles.currentUserRow : styles.otherUserRow,
-        ]}
+        style={[styles.messageRowContainer, isCurrentUser ? styles.currentUserRow : styles.otherUserRow]}
       >
         {!isCurrentUser && (
           <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
         )}
         <View>
           {!isCurrentUser ? (
-            <Text style={styles.userIdText_current}>{item.user._id}</Text>
+            <Text style={styles.userIdText_current}>{item.user.email}</Text>
           ) : (
             <Text style={styles.userIdText_other}>You</Text>
           )}
           <View
             style={[
               styles.messageContainer,
-              isCurrentUser
-                ? styles.currentUserMessage
-                : styles.otherUserMessage,
+              isCurrentUser ? styles.currentUserMessage : styles.otherUserMessage,
             ]}
           >
             <Text
-              style={[
-                styles.messageText,
-                isCurrentUser ? styles.currentUserText : styles.otherUserText,
-              ]}
+              style={[styles.messageText, isCurrentUser ? styles.currentUserText : styles.otherUserText]}
             >
               {item.text}
             </Text>
             <Text
-              style={[
-                styles.timeText,
-                isCurrentUser ? styles.currentUserTime : styles.otherUserTime,
-              ]}
+              style={[styles.timeText, isCurrentUser ? styles.currentUserTime : styles.otherUserTime]}
             >
               {formattedTime}
             </Text>
@@ -130,6 +134,13 @@ export default function Chat() {
     );
   };
 
+  // Scroll to bottom when messages update
+  const onContentSizeChange = useCallback(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, []);
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -137,8 +148,8 @@ export default function Chat() {
         data={messages}
         renderItem={renderMessage}
         keyExtractor={(item) => item._id}
-        inverted
         contentContainerStyle={styles.messagesList}
+        onContentSizeChange={onContentSizeChange} // Scroll to bottom on content size change
       />
 
       <View style={styles.inputContainer}>
@@ -153,16 +164,8 @@ export default function Chat() {
           multiline
           maxHeight={100}
         />
-        <TouchableOpacity
-          onPress={sendMessage}
-          style={styles.sendButton}
-          disabled={!inputText.trim()}
-        >
-          <Ionicons
-            name="send"
-            size={24}
-            color={inputText.trim() ? "#6366F1" : "#CBD5E1"}
-          />
+        <TouchableOpacity onPress={sendMessage} style={styles.sendButton} disabled={!inputText.trim()}>
+          <Ionicons name="send" size={24} color={inputText.trim() ? "#6366F1" : "#CBD5E1"} />
         </TouchableOpacity>
       </View>
     </View>
