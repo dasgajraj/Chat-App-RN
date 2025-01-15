@@ -8,23 +8,20 @@ import { useNavigation } from "@react-navigation/native";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoginMode, setIsLoginMode] = useState(true);  // This controls whether we're signing up or signing in
+  const [isLoginMode, setIsLoginMode] = useState(true); 
   const navigation = useNavigation();
 
-  // Function for handling sign-up
   const handleSignUp = () => {
     if (email && password) {
       createUserWithEmailAndPassword(auth, email, password)
         .then((userCredential) => {
           const user = userCredential.user;
 
-          // Create a user record in RTDB
           const userRef = ref(realtimeDb, `users/${user.uid}`);
           set(userRef, {
             email: user.email,
           })
             .then(() => {
-              // Navigate to Home after adding user to RTDB
               navigation.navigate("Home");
             })
             .catch((error) => {
@@ -39,7 +36,6 @@ export default function Login() {
     }
   };
 
-  // Function for handling sign-in
   const handleSignIn = () => {
     if (email && password) {
       signInWithEmailAndPassword(auth, email, password)

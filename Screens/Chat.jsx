@@ -25,18 +25,15 @@ export default function Chat() {
   const route = useRoute();
   const { recipientId, recipientEmail } = route.params;
 
-  // Chat ID is based on the two users' UIDs sorted alphabetically
   const currentUserUid = auth.currentUser.uid;
   const chatId =
     currentUserUid < recipientId ? `${currentUserUid}_${recipientId}` : `${recipientId}_${currentUserUid}`;
 
-  // Handle user sign-out
   const onSignOut = () => {
     signOut(auth).catch((error) => console.log("Error logging out: ", error));
     navigation.navigate("Login");
   };
 
-  // Set up navigation options for the header
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -55,7 +52,6 @@ export default function Chat() {
     });
   }, [navigation, recipientEmail]);
 
-  // Fetch messages when the component mounts
   useEffect(() => {
     const messagesRef = ref(realtimeDb, `messages/${chatId}`);
     onValue(messagesRef, (snapshot) => {
@@ -64,14 +60,12 @@ export default function Chat() {
         messageList.push({ ...child.val(), _id: child.key });
       });
 
-      // Sort messages by creation date in ascending order (oldest first, latest at the bottom)
       setMessages(messageList.sort((a, b) => a.createdAt - b.createdAt));
     });
 
     return () => off(messagesRef); // Cleanup listener on unmount
   }, [chatId]);
 
-  // Send message to the chat
   const sendMessage = useCallback(() => {
     if (!inputText.trim()) return;
 
@@ -88,10 +82,9 @@ export default function Chat() {
     };
 
     set(newMessageRef, message);
-    setInputText(""); // Clear the input field
+    setInputText("");
   }, [inputText, chatId]);
 
-  // Render each message in the chat
   const renderMessage = ({ item }) => {
     const isCurrentUser = item.user._id === auth.currentUser.uid;
     const formattedTime = new Date(item.createdAt).toLocaleTimeString([], {
@@ -134,7 +127,6 @@ export default function Chat() {
     );
   };
 
-  // Scroll to bottom when messages update
   const onContentSizeChange = useCallback(() => {
     if (flatListRef.current) {
       flatListRef.current.scrollToEnd({ animated: true });

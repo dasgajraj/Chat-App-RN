@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useLayoutEffect } from "react";
 import { View, Text, TouchableOpacity, FlatList, StyleSheet, SafeAreaView } from "react-native";
 import { auth, realtimeDb } from "../firebaseConfig";
-import { ref, onValue } from "firebase/database"; // off is part of the older Firebase API
+import { ref, onValue } from "firebase/database"; 
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign } from "@expo/vector-icons";
 import { signOut } from "firebase/auth";
@@ -23,18 +23,17 @@ const Home = () => {
         </TouchableOpacity>
       ),
       headerStyle: {
-        backgroundColor: "#6366F1", // Custom background color
-        elevation: 0, // Removing shadow in Android
+        backgroundColor: "#6366F1",
+        elevation: 0, 
       },
-      headerTintColor: "#fff", // White color for title and icons
+      headerTintColor: "#fff",
       headerTitleStyle: {
-        fontWeight: "bold", // Make the title bold
-        fontSize: 20, // Adjust the font size for the title
+        fontWeight: "bold", 
+        fontSize: 20, 
       },
     });
   }, [navigation]);
 
-  // Fetch list of users from Firebase
   useEffect(() => {
     const usersRef = ref(realtimeDb, "users");
     const unsubscribe = onValue(usersRef, (snapshot) => {
@@ -46,14 +45,13 @@ const Home = () => {
           usersData.push({ id: child.key, email: user.email });
         }
       });
-      setUsers(usersData); // Update the state with the fetched users
+      setUsers(usersData); 
     });
 
-    // Firebase v9+ update: Unsubscribe by using the cleanup function
     return () => {
-      unsubscribe(); // Calling unsubscribe function instead of off() to remove the listener
+      unsubscribe();
     };
-  }, []); // Empty dependency array ensures this runs once on component mount
+  }, []);
 
   const navigateToChat = (recipientId, recipientEmail) => {
     navigation.navigate("Chat", { recipientId, recipientEmail });
