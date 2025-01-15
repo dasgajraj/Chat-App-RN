@@ -49,7 +49,6 @@ export default function StackNavigation() {
         },
       }}
     >
-      {/* Home Screen */}
       <Stack.Screen
         name="Home"
         component={Home}
@@ -59,7 +58,6 @@ export default function StackNavigation() {
         }}
       />
 
-      {/* Chat Screen - Will receive `recipientId` and `recipientEmail` from Home */}
       <Stack.Screen
         name="Chat"
         component={Chat}
@@ -69,7 +67,6 @@ export default function StackNavigation() {
         }}
       />
 
-      {/* Login Screen */}
       <Stack.Screen
         name="Login"
         component={Login}
