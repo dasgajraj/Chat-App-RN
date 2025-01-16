@@ -27,7 +27,9 @@ export default function Chat() {
 
   const currentUserUid = auth.currentUser.uid;
   const chatId =
-    currentUserUid < recipientId ? `${currentUserUid}_${recipientId}` : `${recipientId}_${currentUserUid}`;
+    currentUserUid < recipientId
+      ? `${currentUserUid}_${recipientId}`
+      : `${recipientId}_${currentUserUid}`;
 
   const onSignOut = () => {
     signOut(auth).catch((error) => console.log("Error logging out: ", error));
@@ -56,15 +58,49 @@ export default function Chat() {
     const messagesRef = ref(realtimeDb, `messages/${chatId}`);
     onValue(messagesRef, (snapshot) => {
       const messageList = [];
+      const updates = {}; // For updating statuses
+
       snapshot.forEach((child) => {
-        messageList.push({ ...child.val(), _id: child.key });
+        const message = { ...child.val(), _id: child.key };
+
+        // Mark messages as delivered if they are from the recipient
+        if (message.status === "sent" && message.user._id !== currentUserUid) {
+          updates[child.key] = { ...message, status: "delivered" };
+        }
+
+        messageList.push(message);
       });
 
       setMessages(messageList.sort((a, b) => a.createdAt - b.createdAt));
+
+      // Update message statuses in the database
+      Object.keys(updates).forEach((key) => {
+        const messageRef = ref(realtimeDb, `messages/${chatId}/${key}`);
+        set(messageRef, updates[key]);
+      });
     });
 
     return () => off(messagesRef); // Cleanup listener on unmount
   }, [chatId]);
+
+  useEffect(() => {
+    const markAsRead = () => {
+      const updates = {};
+
+      messages.forEach((message) => {
+        if (message.status === "delivered" && message.user._id !== currentUserUid) {
+          updates[message._id] = { ...message, status: "read" };
+        }
+      });
+
+      Object.keys(updates).forEach((key) => {
+        const messageRef = ref(realtimeDb, `messages/${chatId}/${key}`);
+        set(messageRef, updates[key]);
+      });
+    };
+
+    markAsRead();
+  }, [chatId, messages]);
 
   const sendMessage = useCallback(() => {
     if (!inputText.trim()) return;
@@ -75,6 +111,7 @@ export default function Chat() {
     const message = {
       createdAt: Date.now(),
       text: inputText.trim(),
+      status: "sent",
       user: {
         _id: auth.currentUser.uid,
         email: auth.currentUser.email,
@@ -92,19 +129,28 @@ export default function Chat() {
       minute: "2-digit",
     });
 
+    const statusText = isCurrentUser
+      ? item.status === "read"
+        ? "Read"
+        : item.status === "delivered"
+        ? "Delivered"
+        : "Sent"
+      : "";
+
     return (
       <View
-        style={[styles.messageRowContainer, isCurrentUser ? styles.currentUserRow : styles.otherUserRow]}
+        style={[
+          styles.messageRowContainer,
+          isCurrentUser ? styles.currentUserRow : styles.otherUserRow,
+        ]}
       >
         {!isCurrentUser && (
           <Image source={{ uri: item.user.avatar }} style={styles.avatar} />
         )}
         <View>
-          {!isCurrentUser ? (
-            <Text style={styles.userIdText_current}>{item.user.email}</Text>
-          ) : (
-            <Text style={styles.userIdText_other}>You</Text>
-          )}
+          <Text style={isCurrentUser ? styles.userIdTextOther : styles.userIdTextCurrent}>
+            {isCurrentUser ? "You" : item.user.email}
+          </Text>
           <View
             style={[
               styles.messageContainer,
@@ -112,15 +158,35 @@ export default function Chat() {
             ]}
           >
             <Text
-              style={[styles.messageText, isCurrentUser ? styles.currentUserText : styles.otherUserText]}
+              style={[
+                styles.messageText,
+                isCurrentUser ? styles.currentUserText : styles.otherUserText,
+              ]}
             >
               {item.text}
             </Text>
             <Text
-              style={[styles.timeText, isCurrentUser ? styles.currentUserTime : styles.otherUserTime]}
+              style={[
+                styles.timeText,
+                isCurrentUser ? styles.currentUserTime : styles.otherUserTime,
+              ]}
             >
               {formattedTime}
             </Text>
+            {isCurrentUser && (
+              <Text
+                style={[
+                  styles.statusText,
+                  item.status === "read"
+                    ? styles.readStatus
+                    : item.status === "delivered"
+                    ? styles.deliveredStatus
+                    : styles.sentStatus,
+                ]}
+              >
+                {statusText}
+              </Text>
+            )}
           </View>
         </View>
       </View>
@@ -141,7 +207,7 @@ export default function Chat() {
         renderItem={renderMessage}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.messagesList}
-        onContentSizeChange={onContentSizeChange} // Scroll to bottom on content size change
+        onContentSizeChange={onContentSizeChange}
       />
 
       <View style={styles.inputContainer}>
@@ -165,6 +231,26 @@ export default function Chat() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+  },
+  messagesList: {
+    padding: 15,
+  },
+  messageRowContainer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    marginVertical: 4,
+  },
+  currentUserRow: {
+    justifyContent: "flex-end",
+  },
+  otherUserRow: {
+    justifyContent: "flex-start",
+  },
+  messageContainer: {
+    maxWidth: width * 0.7,},
   container: {
     flex: 1,
     backgroundColor: "#F8FAFC",
@@ -259,6 +345,21 @@ const styles = StyleSheet.create({
     marginRight: 40,
     textAlign: "right",
   },
+  statusText: {
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: "right",
+  },
+  readStatus: {
+    color: "#10B981", // Green for read
+  },
+  deliveredStatus: {
+    color: "#3B82F6", // Blue for delivered
+  },
+  sentStatus: {
+    color: "#64748B", // Gray for sent
+  },
+  
   userIdText_other: {
     fontSize: 12,
     color: "#64748B",
