@@ -39,7 +39,7 @@ const Home = () => {
   // Fetch users
   useEffect(() => {
     const usersRef = ref(realtimeDb, "users");
-    
+
     const handleUsers = (snapshot) => {
       const usersData = [];
       snapshot.forEach((child) => {
@@ -58,10 +58,10 @@ const Home = () => {
   // Monitor all messages in a single listener
   useEffect(() => {
     const messagesRef = ref(realtimeDb, "messages");
-    
+
     const handleMessages = (snapshot) => {
       const newChatData = {};
-      
+
       snapshot.forEach((chatSnapshot) => {
         const chatId = chatSnapshot.key;
         // Only process chats involving current user
@@ -76,8 +76,8 @@ const Home = () => {
           messages.push(message);
 
           // Update unread count
-          if (message.user._id !== currentUserUid && 
-             (message.status === "sent" || message.status === "delivered")) {
+          if (message.user._id !== currentUserUid &&
+            (message.status === "sent" || message.status === "delivered")) {
             unreadCount++;
           }
 
@@ -89,7 +89,7 @@ const Home = () => {
 
         // Extract other user's ID from chat ID
         const otherUserId = chatId.split('_').find(id => id !== currentUserUid);
-        
+
         if (otherUserId) {
           newChatData[otherUserId] = {
             unreadCount,
@@ -110,11 +110,11 @@ const Home = () => {
     const userData = chatData[item.id] || { unreadCount: 0, lastMessage: null };
     const { unreadCount, lastMessage } = userData;
 
-    const lastMessageTime = lastMessage 
-      ? new Date(lastMessage.createdAt).toLocaleTimeString([], { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        })
+    const lastMessageTime = lastMessage
+      ? new Date(lastMessage.createdAt).toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
       : '';
 
     return (
@@ -124,9 +124,9 @@ const Home = () => {
           unreadCount > 0 && styles.userItemUnread
         ]}
         onPress={() => {
-          navigation.navigate("Chat", { 
-            recipientId: item.id, 
-            recipientEmail: item.email 
+          navigation.navigate("Chat", {
+            recipientId: item.id,
+            recipientEmail: item.email
           });
         }}
       >
@@ -161,7 +161,7 @@ const Home = () => {
   }, [chatData, navigation, currentUserUid]);
 
   const totalUnread = Object.values(chatData).reduce(
-    (sum, chat) => sum + (chat.unreadCount || 0), 
+    (sum, chat) => sum + (chat.unreadCount || 0),
     0
   );
 
@@ -228,38 +228,38 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   timeText: {
-      fontSize: 12,
-      color: '#94A3B8',
-      marginBottom: 4,
-    },
-    notificationBubble: {
-      backgroundColor: '#6366F1',
-      borderRadius: 12,
-      minWidth: 24,
-      height: 24,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 8,
-    },
-    bubbleText: {
-      color: '#FFFFFF',
-      fontSize: 12,
-      fontWeight: '600',
-    },
-    totalUnread: {
-      fontSize: 14,
-      color: '#6366F1',
-      fontWeight: '600',
-      textAlign: 'center',
-      paddingVertical: 8,
-      marginBottom: 8,
-      backgroundColor: '#EEF2FF',
-      borderRadius: 8,
-    },
-    unreadText: {
-      color: '#6366F1',
-      fontWeight: '600',
-    },
-  });
+    fontSize: 12,
+    color: '#94A3B8',
+    marginBottom: 4,
+  },
+  notificationBubble: {
+    backgroundColor: '#6366F1',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  bubbleText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  totalUnread: {
+    fontSize: 14,
+    color: '#6366F1',
+    fontWeight: '600',
+    textAlign: 'center',
+    paddingVertical: 8,
+    marginBottom: 8,
+    backgroundColor: '#EEF2FF',
+    borderRadius: 8,
+  },
+  unreadText: {
+    color: '#6366F1',
+    fontWeight: '600',
+  },
+});
 
-  export default Home;
+export default Home;

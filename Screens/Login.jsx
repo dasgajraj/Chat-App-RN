@@ -8,7 +8,7 @@ import { useNavigation } from "@react-navigation/native";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoginMode, setIsLoginMode] = useState(true); 
+  const [isLoginMode, setIsLoginMode] = useState(true);
   const navigation = useNavigation();
 
   const handleSignUp = () => {

@@ -133,8 +133,8 @@ export default function Chat() {
       ? item.status === "read"
         ? "Read"
         : item.status === "delivered"
-        ? "Delivered"
-        : "Sent"
+          ? "Delivered"
+          : "Sent"
       : "";
 
     return (
@@ -180,8 +180,8 @@ export default function Chat() {
                   item.status === "read"
                     ? styles.readStatus
                     : item.status === "delivered"
-                    ? styles.deliveredStatus
-                    : styles.sentStatus,
+                      ? styles.deliveredStatus
+                      : styles.sentStatus,
                 ]}
               >
                 {statusText}
@@ -250,7 +250,8 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
   },
   messageContainer: {
-    maxWidth: width * 0.7,},
+    maxWidth: width * 0.7,
+  },
   container: {
     flex: 1,
     backgroundColor: "#F8FAFC",
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
   sentStatus: {
     color: "#64748B", // Gray for sent
   },
-  
+
   userIdText_other: {
     fontSize: 12,
     color: "#64748B",
